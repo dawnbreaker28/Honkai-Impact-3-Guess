@@ -8,6 +8,7 @@ class People:
     HP = 0
     speed = 0
     stunned = False
+    broken = 0
 
     def __init__(self):
         pass
@@ -33,6 +34,13 @@ class People:
     def recover(self):
         self.stunned = False
 
+    def checkBroken(self):
+        if self.broken > 0:
+            self.HP -= 4
+            self.broken -= 1
+        if self.HP < 1:
+            return -1
+
 
 class Kevin(People):
     attack = 20
@@ -42,6 +50,9 @@ class Kevin(People):
     stunned = False
 
     def action(self, rounds, people):
+        d0 = self.checkBroken()
+        if d0 == -1:
+            return -1
         d1 = self.skill1(rounds, people)
         if d1 == 0:
             if self.isStunned():
@@ -72,8 +83,6 @@ class Kevin(People):
 
     def skill2(self, rounds, people):
         if not self.stunned:
-            print(people.HP)
-            print(people.HP_max)
             if people.HP < people.HP_max * 0.3:
                 if random.random() < 0.3:
                     return 100
@@ -89,6 +98,9 @@ class V2v(People):
     activate = False
 
     def action(self, rounds, people):
+        d0 = self.checkBroken()
+        if d0 == -1:
+            return -1
         if self.isStunned():
             self.HP -= self.attack - self.defence
             self.recover()
@@ -117,6 +129,51 @@ class V2v(People):
             people.HP += int(random.random() * 10 + 10)
             self.attack += int(13 * random.random() + 2)
             self.activate = True
+        return 0
+
+
+class Kosmo(People):
+    attack = 19
+    defence = 11
+    HP = 100
+    speed = 19
+    stunned = False
+    activate = False
+
+    def action(self, rounds, people):
+        d0 = self.checkBroken()
+        if d0 == -1:
+            return -1
+        d1 = self.skill1(rounds, people)
+        if d1 == 0:
+            if self.isStunned():
+                self.HP -= self.attack - self.defence
+                self.recover()
+                if random.random() < 0.15:
+                    self.broken = 3
+                if self.HP < 0:
+                    return -1
+            else:
+                people.beingAttacked(self.attack)
+                if random.random() < 0.15:
+                    people.broken = 3
+        if people.HP < 1:
+            return 1
+        return 0
+
+    def skill1(self, rounds, people):
+        if rounds % 2 == 0:
+            attack = 0
+            for i in range(4):
+                attack += int(random.random()*11 + 11)
+                if people.broken > 0:
+                    attack += 3
+                else:
+                    if random.random() < 0.15:
+                        people.broken = 3
+                people.beingAttacked(attack)
+                attack = 0
+            return 1
         return 0
 
 
@@ -154,22 +211,22 @@ def fight(left, right, rounds):
 def game():
     v2v_wins = 0
     kevin_wins = 0
+    kosmo_wins = 0
     for i in range(1000):
         rounds = 1
         kevin = Kevin()
         v2v = V2v()
-        result = fight(kevin, v2v, rounds)
+        kosmo = Kosmo()
+        result = 0
         while result == 0:
+            result = fight(kosmo, v2v, rounds)
             rounds += 1
-            result = fight(kevin, v2v, rounds)
-            print('rounds', rounds, 'kevin HP:', kevin.HP)
-            print('rounds', rounds, 'v2v HP:', v2v.HP)
         if result == 1:
-            kevin_wins += 1
+            kosmo_wins += 1
         else:
             v2v_wins += 1
+    print('kosmo win ', kosmo_wins, ' times')
     print('v2v win ', v2v_wins, ' times')
-    print('kevin win ', kevin_wins, ' times')
 
 
 if __name__ == '__main__':
