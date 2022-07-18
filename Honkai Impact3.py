@@ -82,10 +82,9 @@ class Kevin(People):
             return 0
 
     def skill2(self, rounds, people):
-        if not self.stunned:
-            if people.HP < people.HP_max * 0.3:
-                if random.random() < 0.3:
-                    return 100
+        if people.HP < people.HP_max * 0.3:
+            if random.random() < 0.3:
+                return 100
         return 0
 
 
@@ -112,7 +111,7 @@ class V2v(People):
             if d1 == 0:
                 people.beingAttacked(self.attack)
             else:
-                people.beingAttacked(int(d1) + people.defence)
+                people.beingAttacked(int(d1))
             if people.HP < 0:
                 return 1
         return 0
@@ -219,14 +218,14 @@ def game():
         kosmo = Kosmo()
         result = 0
         while result == 0:
-            result = fight(kosmo, v2v, rounds)
+            result = fight(v2v, kosmo, rounds)
             rounds += 1
         if result == 1:
-            kosmo_wins += 1
-        else:
             v2v_wins += 1
-    print('kosmo win ', kosmo_wins, ' times')
+        else:
+            kosmo_wins += 1
     print('v2v win ', v2v_wins, ' times')
+    print('kosmo win ', kosmo_wins, ' times')
 
 
 if __name__ == '__main__':
