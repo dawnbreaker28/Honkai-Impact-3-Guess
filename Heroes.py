@@ -405,3 +405,47 @@ class Mobius(People):
                 self.defence = self.defence - 3
                 if self.defence < 0:
                     self.defence = 0
+
+
+class Hua(People):
+    attack = 21
+    defence = 12
+    HP = 100
+    speed = 15
+    accumulate = False
+
+    def action(self, rounds, people):
+        self.defence = 12
+        if rounds % 2 == 0:
+            self.skill1(rounds, people)
+        else:
+            self.normal_attack(rounds, people)
+        if not people.isAlive():
+            return 1
+        if not self.isAlive():
+            return -1
+        return 0
+
+    def skill1(self, rounds, people):
+        self.defence += 3
+        self.accumulate = True
+
+    def normal_attack(self, rounds, people):
+        if not self.stunned:
+            people.beingAttacked(self.attack, self)
+            if self.accumulate:
+                people.beingAttacked(int(23*random.random()+10), self, False)
+                self.accumulate = False
+        else:
+            self.HP -= self.attack - self.defence
+            self.recover()
+            if self.accumulate:
+                people.beingAttacked(int(23 * random.random()+10), False)
+                self.accumulate = False
+
+    def beingAttacked(self, damage, people, isPhysic=True):
+        if isPhysic:
+            if damage > people.defence:
+                self.HP -= int(0.8*(damage - self.defence))
+        else:
+            self.HP -= int(0.8*damage)
