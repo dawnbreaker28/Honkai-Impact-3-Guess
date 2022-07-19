@@ -13,8 +13,21 @@ class People:
     def __init__(self):
         pass
 
+    def round(self, rounds, people):  # return -1 for self lost, 1 for opponent lost, 0 for peace
+        self.checkBroken()
+        if not self.isAlive():
+            return -1
+        return self.action(rounds, people)
+
     def action(self, rounds, people):
         pass  # return -1 for self lost, 1 for opponent lost
+
+    def normal_attack(self, rounds, people):
+        if not self.stunned:
+            people.beingAttacked(self.attack)
+        else:
+            self.HP -= self.attack - self.defence
+            self.recover()
 
     def skill1(self, rounds, people):
         pass
@@ -38,8 +51,12 @@ class People:
         if self.broken > 0:
             self.HP -= 4
             self.broken -= 1
-        if self.HP < 1:
-            return -1
+
+    def isAlive(self):
+        if self.HP > 0:
+            return True
+        else:
+            return False
 
 
 class Kevin(People):
@@ -50,29 +67,33 @@ class Kevin(People):
     stunned = False
 
     def action(self, rounds, people):
-        d0 = self.checkBroken()
-        if d0 == -1:
-            return -1
         d1 = self.skill1(rounds, people)
         if d1 == 0:
-            if self.isStunned():
-                self.HP -= self.attack - self.defence
-                self.recover()
-                if self.HP < 0:
-                    return -1
-            else:
-                people.beingAttacked(self.attack)
-                d2 = self.skill2(rounds, people)
-                if d2 == 100:
-                    return 1
+            return self.normal_attack(rounds, people)
         else:
             people.beingAttacked(d1 + people.defence)
             d2 = self.skill2(rounds, people)
             if d2 == 100:
                 return 1
-        if people.HP < 1:
-            return 1
-        return 0
+            if not people.isAlive():
+                return 1
+            return 0
+
+    def normal_attack(self, rounds, people):
+        if not self.stunned:
+            people.beingAttacked(self.attack)
+            d2 = self.skill2(rounds, people)
+            if d2 == 100:
+                return 1
+            if not people.isAlive():
+                return 1
+            return 0
+        else:
+            self.HP -= self.attack - self.defence
+            self.recover()
+            if not self.isAlive():
+                return -1
+            return 0
 
     def skill1(self, rounds, people):
         if rounds % 3 == 0:
@@ -97,23 +118,14 @@ class V2v(People):
     activate = False
 
     def action(self, rounds, people):
-        d0 = self.checkBroken()
-        if d0 == -1:
-            return -1
-        if self.isStunned():
-            self.HP -= self.attack - self.defence
-            self.recover()
-            if self.HP < 0:
-                return -1
+        self.skill2(rounds, people)
+        d1 = self.skill1(rounds, people)
+        if d1 == 0:
+            people.beingAttacked(self.attack)
         else:
-            self.skill2(rounds, people)
-            d1 = self.skill1(rounds, people)
-            if d1 == 0:
-                people.beingAttacked(self.attack)
-            else:
-                people.beingAttacked(int(d1))
-            if people.HP < 0:
-                return 1
+            people.beingAttacked(int(d1))
+        if people.HP < 0:
+            return 1
         return 0
 
     def skill1(self, rounds, people):
@@ -140,47 +152,74 @@ class Kosmo(People):
     activate = False
 
     def action(self, rounds, people):
-        d0 = self.checkBroken()
-        if d0 == -1:
-            return -1
         d1 = self.skill1(rounds, people)
         if d1 == 0:
-            if self.isStunned():
-                self.HP -= self.attack - self.defence
-                self.recover()
-                if random.random() < 0.15:
-                    self.broken = 3
-                if self.HP < 0:
-                    return -1
-            else:
-                people.beingAttacked(self.attack)
-                if random.random() < 0.15:
-                    people.broken = 3
-        if people.HP < 1:
+            self.normal_attack(rounds, people)
+        if not people.isAlive():
             return 1
         return 0
+
+    def normal_attack(self, rounds, people):
+        if not self.stunned:
+            people.beingAttacked(self.attack)
+            if random.random() < 0.15:
+                people.broken = 3
+            if not people.isAlive():
+                return 1
+            return 0
+        else:
+            self.HP -= self.attack - self.defence
+            self.recover()
+            if random.random() < 0.15:
+                self.broken = 3
+            if not self.isAlive():
+                return -1
+            return 0
 
     def skill1(self, rounds, people):
         if rounds % 2 == 0:
             attack = 0
             for i in range(4):
-                attack += int(random.random()*11 + 11)
+                attack += int(random.random() * 11 + 11)
                 if people.broken > 0:
                     attack += 3
                 else:
                     if random.random() < 0.15:
                         people.broken = 3
-                people.beingAttacked(attack)
+                if attack - people.defence > 0:
+                    people.beingAttacked(attack)
                 attack = 0
             return 1
         return 0
 
 
+class Griseo(People):
+    attack = 16
+    defence = 11
+    HP = 100
+    speed = 18
+    stunned = False
+    up_defence = 0
+    shield = 0
+
+    def action(self, rounds, people):
+        self.skill1(rounds, people)
+        if people.HP < 1:
+            return 1
+        return 0
+
+    def skill1(self, rounds, people):
+        if rounds % 3 == 0:
+            if self.shield > 0:
+                self.shield = 15
+                people.beingAttacked(int(self.defence * (random.random() * 2 + 2)))
+
+
 def fight(left, right, rounds):
     if left.speed < right.speed:
-        r2 = right.action(rounds, left)
+        r2 = right.round(rounds, left)
         if r2 == 0:
-            r1 = left.action(rounds, right)
+            r1 = left.round(rounds, right)
             if r1 == 0:
                 return 0
             elif r1 == -1:
@@ -192,9 +231,9 @@ def fight(left, right, rounds):
         else:
             return 2
     else:
-        r1 = left.action(rounds, right)
+        r1 = left.round(rounds, right)
         if r1 == 0:
-            r2 = right.action(rounds, left)
+            r2 = right.round(rounds, left)
             if r2 == 0:
                 return 0
             elif r2 == -1:
@@ -218,14 +257,16 @@ def game():
         kosmo = Kosmo()
         result = 0
         while result == 0:
-            result = fight(v2v, kosmo, rounds)
+            result = fight(kosmo, v2v, rounds)
+            # print("rounds: ", rounds, 'v2v HP', v2v.HP)
+            # print("rounds: ", rounds, 'kevin HP', kevin.HP)
             rounds += 1
         if result == 1:
-            v2v_wins += 1
-        else:
             kosmo_wins += 1
-    print('v2v win ', v2v_wins, ' times')
+        else:
+            v2v_wins += 1
     print('kosmo win ', kosmo_wins, ' times')
+    print('v2v win ', v2v_wins, ' times')
 
 
 if __name__ == '__main__':
