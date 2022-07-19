@@ -9,6 +9,8 @@ class People:
     speed = 0
     stunned = False
     broken = 0
+    sealed = False
+    silenced = False
 
     def __init__(self):
         pass
@@ -17,7 +19,17 @@ class People:
         self.checkBroken()
         if not self.isAlive():
             return -1
-        return self.action(rounds, people)
+        if self.sealed:
+            self.recover_seal()
+            return 0
+        if self.silenced:
+            self.recover_silence()
+            people.HP -= self.attack - people.defence
+            if not people.isAlive():
+                return 1
+            return 0
+        else:
+            return self.action(rounds, people)
 
     def action(self, rounds, people):
         pass  # return -1 for self lost, 1 for opponent lost
@@ -47,6 +59,18 @@ class People:
 
     def recover(self):
         self.stunned = False
+
+    def seal(self):
+        self.sealed = True
+
+    def recover_seal(self):
+        self.sealed = False
+
+    def silence(self):
+        self.silenced = True
+
+    def recover_silence(self):
+        self.silenced = False
 
     def checkBroken(self):
         if self.broken > 0:
@@ -243,7 +267,6 @@ class Pardofelis(People):
     defence = 10
     HP = 100
     speed = 24
-    stunned = False
 
     def action(self, rounds, people):
         if rounds % 3 == 0:
@@ -259,9 +282,45 @@ class Pardofelis(People):
         return 0
 
     def skill1(self, rounds, people):
-        HP_before = people.HP
         people.beingAttacked(30, self)
-        HP_after = people.HP
-        self.HP += (HP_before - HP_after)
+        self.HP += (30 - people.defence)
         if self.HP > 100:
             self.HP = 100
+
+
+class Aponia(People):
+    attack = 21
+    defence = 10
+    HP = 100
+    speed = 30
+
+    def action(self, rounds, people):
+        if rounds % 4 == 0:
+            self.skill1(rounds, people)
+            if random.random() < 0.3:
+                people.silence()
+        else:
+            self.normal_attack(rounds, people)
+        if not people.isAlive():
+            return 1
+        if not self.isAlive():
+            return -1
+        return 0
+
+    def skill1(self, rounds, people):
+        people.beingAttacked(35, self)
+        people.seal()
+
+    def normal_attack(self, rounds, people):
+        if not self.stunned:
+            people.beingAttacked(self.attack, self)
+            if random.random() < 0.3:
+                people.silence()
+        else:
+            self.HP -= self.attack - self.defence
+            self.recover()
+            if random.random() < 0.3:
+                self.silence()
+
+
+
