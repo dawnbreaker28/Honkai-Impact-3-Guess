@@ -40,6 +40,8 @@ def game():
     griseo_wins = 0
     pardofelis_wins = 0
     aponia_wins = 0
+    elysia_wins = 0
+    mobius_wins = 0
     for i in range(1000):
         rounds = 1
         kevin = Heroes.Kevin()
@@ -48,18 +50,20 @@ def game():
         griseo = Heroes.Griseo()
         pardofelis = Heroes.Pardofelis()
         aponia = Heroes.Aponia()
+        elysia = Heroes.Elysia()
+        mobius = Heroes.Mobius()
         result = 0
         while result == 0:
-            result = fight(pardofelis, aponia, rounds)
-            print("rounds: ", rounds, 'aponia HP', aponia.HP)
-            print("rounds: ", rounds, 'pardo HP', pardofelis.HP)
+            result = fight(elysia, mobius, rounds)
+            print("rounds: ", rounds, 'elysia HP', elysia.HP)
+            print("rounds: ", rounds, 'mobius HP', mobius.HP)
             rounds += 1
         if result == 1:
-            pardofelis_wins += 1
+            elysia_wins += 1
         else:
-            aponia_wins += 1
-    print('aponia win ', pardofelis_wins, ' times')
-    print('pardofelis win ', aponia_wins, ' times')
+            mobius_wins += 1
+    print('elysia win ', elysia_wins, ' times')
+    print('mobius win ', mobius_wins, ' times')
 
 
 if __name__ == '__main__':

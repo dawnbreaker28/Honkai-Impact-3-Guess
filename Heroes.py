@@ -7,10 +7,11 @@ class People:
     HP_max = 100
     HP = 0
     speed = 0
-    stunned = False
+    stunned = False  # 混乱by v2v
     broken = 0
-    sealed = False
-    silenced = False
+    sealed = False  # 封印by aponia
+    silenced = False  # 沉默by aponia
+    weak = False  # -6 attack by Elysia
 
     def __init__(self):
         pass
@@ -29,7 +30,12 @@ class People:
                 return 1
             return 0
         else:
-            return self.action(rounds, people)
+            if self.weak:
+                self.attack -= 6
+            result = self.action(rounds, people)
+            if self.weak:
+                self.attack += 6
+            return result
 
     def action(self, rounds, people):
         pass  # return -1 for self lost, 1 for opponent lost
@@ -47,9 +53,12 @@ class People:
     def skill2(self, rounds, people):
         pass
 
-    def beingAttacked(self, damage, people):
-        if damage > people.defence:
-            self.HP -= damage - self.defence
+    def beingAttacked(self, damage, people, isPhysic=True):
+        if isPhysic:
+            if damage > people.defence:
+                self.HP -= damage - self.defence
+        else:
+            self.HP -= damage
 
     def isStunned(self):
         return self.stunned
@@ -247,7 +256,7 @@ class Griseo(People):
         else:
             self.shield = 15
 
-    def beingAttacked(self, damage, people):
+    def beingAttacked(self, damage, people, isPhysic=True):
         real_damage = damage - self.defence
         if real_damage > 0:
             if self.shield == 0:
@@ -256,7 +265,7 @@ class Griseo(People):
                 if real_damage >= self.shield:
                     self.HP -= real_damage - self.shield
                     self.shield = 0
-                    people.beingAttacked(int(self.defence*(2*random.random()+2)), self)
+                    people.beingAttacked(int(self.defence * (2 * random.random() + 2)), self)
 
                 else:
                     self.shield -= real_damage
@@ -323,4 +332,76 @@ class Aponia(People):
                 self.silence()
 
 
+class Elysia(People):
+    attack = 21
+    defence = 8
+    HP = 100
+    speed = 20
 
+    def action(self, rounds, people):
+        if rounds % 2 == 0:
+            self.skill1(rounds, people)
+            if random.random() < 0.35:
+                people.beingAttacked(11 + people.defence, self)
+        else:
+            self.normal_attack(rounds, people)
+        if not people.isAlive():
+            return 1
+        if not self.isAlive():
+            return -1
+        return 0
+
+    def skill1(self, rounds, people):
+        people.beingAttacked(int(25 * (random.random() + 1)), self)
+        people.weak = True
+
+    def normal_attack(self, rounds, people):
+        if not self.stunned:
+            people.beingAttacked(self.attack, self)
+            if random.random() < 0.35:
+                people.beingAttacked(11, self, isPhysic=False)
+        else:
+            self.HP -= self.attack - self.defence
+            self.recover()
+            if random.random() < 0.35:
+                self.HP -= 11
+
+
+class Mobius(People):
+    attack = 21
+    defence = 11
+    HP = 100
+    speed = 23
+
+    def action(self, rounds, people):
+        if rounds % 3 == 0:
+            self.skill1(rounds, people)
+            if random.random() < 0.3:
+                people.silence()
+        else:
+            self.normal_attack(rounds, people)
+        if not people.isAlive():
+            return 1
+        if not self.isAlive():
+            return -1
+        return 0
+
+    def skill1(self, rounds, people):
+        people.beingAttacked(33, self)
+        if random.random() < 0.33:
+            people.seal()
+
+    def normal_attack(self, rounds, people):
+        if not self.stunned:
+            people.beingAttacked(self.attack, self)
+            if random.random() < 0.33:
+                people.defence = people.defence - 3
+                if people.defence < 0:
+                    people.defence = 0
+        else:
+            self.HP -= self.attack - self.defence
+            self.recover()
+            if random.random() < 0.33:
+                self.defence = self.defence - 3
+                if self.defence < 0:
+                    self.defence = 0
