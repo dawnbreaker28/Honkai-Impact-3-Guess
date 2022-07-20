@@ -2,6 +2,20 @@ import Heroes
 import random
 
 
+class Player:
+    name = ''
+    wins = 0
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return self.name
+
+    def win(self):
+        self.wins += 1
+
+
 def fight(left, right, rounds):
     if left.speed < right.speed:
         r2 = right.round(rounds, left)
@@ -33,19 +47,27 @@ def fight(left, right, rounds):
             return 1
 
 
-def game():
-    kevin_wins = 0
-    v2v_wins = 0
-    kosmo_wins = 0
-    griseo_wins = 0
-    pardofelis_wins = 0
-    aponia_wins = 0
-    elysia_wins = 0
-    mobius_wins = 0
-    hua_wins = 0
+def game(a, b):
+    dictionary = {
+        1: 'kevin',
+        2: 'elysia',
+        3: 'aponia',
+        4: 'eden',
+        5: 'v2v',
+        6: 'jiege',
+        7: 'su',
+        8: 'sakura',
+        9: 'kosmo',
+        10: 'mobius',
+        11: 'griseo',
+        12: 'hua',
+        13: 'pardofelis'
+    }
+    left = Player(dictionary[a])
+    right = Player(dictionary[b])
     for i in range(10000):
         rounds = 1
-        kevin = Heroes.Kevin()
+        kevin = Heroes.Kevin(),
         v2v = Heroes.V2v()
         kosmo = Heroes.Kosmo()
         griseo = Heroes.Griseo()
@@ -54,19 +76,52 @@ def game():
         elysia = Heroes.Elysia()
         mobius = Heroes.Mobius()
         hua = Heroes.Hua()
+        eden = Heroes.Eden()
+        jiege = Heroes.Jiege()
+        ying = Heroes.Ying()
+        players = [0,
+                   kevin,
+                   elysia,
+                   aponia,
+                   eden,
+                   v2v,
+                   jiege,
+                   7,
+                   ying,
+                   kosmo,
+                   mobius,
+                   griseo,
+                   hua,
+                   pardofelis
+                   ]
         result = 0
         while result == 0:
-            result = fight(elysia, hua, rounds)
-            # print("rounds: ", rounds, 'elysia HP', elysia.HP)
-            # print("rounds: ", rounds, 'hua HP', hua.HP)
+            result = fight(players[a], players[b], rounds)
+            # print("rounds: ", rounds, 'eden HP', players[4].HP)
+            # print("rounds: ", rounds, 'jiege HP', players[6].HP)
             rounds += 1
         if result == 1:
-            elysia_wins += 1
+            left.win()
         else:
-            hua_wins += 1
-    print('elysia win', elysia_wins, 'times')
-    print('hua win', hua_wins, 'times')
+            right.win()
+    print(left, 'win', left.wins, 'times')
+    print(right, 'win', right.wins, 'times')
 
 
 if __name__ == '__main__':
-    game()
+    game(8, 4)
+    # dictionary = {
+    #     1: 'kevin',
+    #     2: 'elysia',
+    #     3: 'aponia',
+    #     4: 'eden',
+    #     5: 'v2v',
+    #     6: 'jiege',
+    #     7: 'su',
+    #     8: 'sakura',
+    #     9: 'kosmo',
+    #     10: 'mobius',
+    #     11: 'griseo',
+    #     12: 'hua',
+    #     13: 'pardofelis'
+    # }

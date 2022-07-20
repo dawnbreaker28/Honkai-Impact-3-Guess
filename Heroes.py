@@ -5,7 +5,7 @@ class People:
     attack = 0
     defence = 0
     HP_max = 100
-    HP = 0
+    HP = 100
     speed = 0
     stunned = False  # 混乱by v2v
     broken = 0
@@ -21,7 +21,7 @@ class People:
         if not self.isAlive():
             return -1
         if self.sealed:
-            self.recover_seal()
+            self.recover()
             return 0
         if self.silenced:
             self.recover_silence()
@@ -41,12 +41,12 @@ class People:
     def action(self, rounds, people):
         pass  # return -1 for self lost, 1 for opponent lost
 
-    def normal_attack(self, rounds, people):
+    def normal_attack(self, rounds, target):
         if not self.stunned:
-            people.beingAttacked(self.attack, self)
+            target.beingAttacked(self.attack, self)
         else:
             self.HP -= self.attack - self.defence
-            self.recover()
+            self.recover_stun()
 
     def skill1(self, rounds, people):
         pass
@@ -54,9 +54,9 @@ class People:
     def skill2(self, rounds, people):
         pass
 
-    def beingAttacked(self, damage, people, isPhysic=True):
+    def beingAttacked(self, damage, source, isPhysic=True):
         if isPhysic:
-            if damage > people.defence:
+            if damage > self.defence:
                 self.HP -= damage - self.defence
         else:
             self.HP -= damage
@@ -64,10 +64,14 @@ class People:
     def isStunned(self):
         return self.stunned
 
+    def recover(self):
+        self.recover_seal()
+        self.recover_silence()
+
     def stun(self):
         self.stunned = True
 
-    def recover(self):
+    def recover_stun(self):
         self.stunned = False
 
     def seal(self):
@@ -125,7 +129,7 @@ class Kevin(People):
             return 0
         else:
             self.HP -= self.attack - self.defence
-            self.recover()
+            self.recover_stun()
             if not self.isAlive():
                 return -1
             return 0
@@ -204,7 +208,7 @@ class Kosmo(People):
             return 0
         else:
             self.HP -= self.attack - self.defence
-            self.recover()
+            self.recover_stun()
             if random.random() < 0.15:
                 self.broken = 3
             if not self.isAlive():
@@ -328,7 +332,7 @@ class Aponia(People):
                 people.silence()
         else:
             self.HP -= self.attack - self.defence
-            self.recover()
+            self.recover_stun()
             if random.random() < 0.3:
                 self.silence()
 
@@ -363,7 +367,7 @@ class Elysia(People):
                 people.beingAttacked(11, self, isPhysic=False)
         else:
             self.HP -= self.attack - self.defence
-            self.recover()
+            self.recover_stun()
             if random.random() < 0.35:
                 self.HP -= 11
 
@@ -399,7 +403,7 @@ class Mobius(People):
                     people.defence = 0
         else:
             self.HP -= self.attack - self.defence
-            self.recover()
+            self.recover_stun()
             if random.random() < 0.33:
                 self.defence = self.defence - 3
                 if self.defence < 0:
@@ -438,14 +442,14 @@ class Hua(People):
                 self.accumulate = False
         else:
             self.HP -= self.attack - self.defence
-            self.recover()
+            self.recover_stun()
             if self.accumulate:
-                people.beingAttacked(int(23 * random.random()+10), False)
+                people.beingAttacked(int(23 * random.random()+10), self, False)
                 self.accumulate = False
 
     def beingAttacked(self, damage, people, isPhysic=True):
         if isPhysic:
-            if damage > people.defence:
+            if damage > self.defence:
                 self.HP -= round(0.8*(damage - self.defence))
         else:
             self.HP -= round(0.8*damage)
@@ -456,6 +460,131 @@ class Eden(People):
     defence = 12
     HP = 100
     speed = 16
+    speed_up = False
+
+    def action(self, rounds, people):
+        if self.speed_up:
+            self.speed_up = False
+            self.speed = 16
+        if rounds % 2 == 0:
+            self.skill1(rounds, people)
+        else:
+            self.normal_attack(rounds, people)
+        if not people.isAlive():
+            return 1
+        if not self.isAlive():
+            return -1
+        return 0
+
+    def skill1(self, rounds, people):
+        self.attack += 4
+        self.normal_attack(rounds, people)
+        self.speed = 100
+        self.speed_up = True
+
+    def normal_attack(self, rounds, people):
+        if not self.stunned:
+            people.beingAttacked(self.attack, self)
+            if random.random() < 0.5:
+                people.beingAttacked(self.attack, self)
+        else:
+            self.HP -= self.attack - self.defence
+            self.recover_stun()
+            if random.random() < 0.5:
+                self.HP -= self.attack - self.defence
+
+
+class Jiege(People):
+    attack = 23
+    defence = 9
+    HP = 100
+    speed = 26
+    rest = False
+    attack_fromHP = 0
+
+    def round(self, rounds, people):  # return -1 for self lost, 1 for opponent lost, 0 for peace
+        self.checkBroken()
+        if not self.isAlive():
+            return -1
+        if self.rest:
+            self.rest = False
+            self.recover()
+            return 0
+        if self.sealed:
+            self.recover()
+            return 0
+        if self.silenced:
+            self.recover_silence()
+            people.HP -= self.attack - people.defence
+            if not people.isAlive():
+                return 1
+            return 0
+        else:
+            if self.weak:
+                self.attack -= 6
+            result = self.action(rounds, people)
+            if self.weak:
+                self.attack += 6
+                self.weak = False
+            return result
+
+    def action(self, rounds, people):
+        if rounds % 3 == 0:
+            self.skill1(rounds, people)
+        else:
+            self.normal_attack(rounds, people)
+        if not people.isAlive():
+            return 1
+        if not self.isAlive():
+            return -1
+        return 0
+
+    def skill1(self, rounds, people):
+        if self.HP > 11:
+            self.HP -= 10
+            people.beingAttacked(46+int(19*random.random()), self)
+            self.rest = True
+        else:
+            self.normal_attack(rounds, self)
+
+    def normal_attack(self, rounds, people):
+        real_attack = self.attack + int((100-self.HP)/5)
+        if not self.stunned:
+            people.beingAttacked(real_attack, self)
+        else:
+            self.HP -= real_attack - self.defence
+            self.recover_stun()
+
+
+class Ying(People):
+    attack = 24
+    defence = 10
+    HP = 100
+    speed = 27
+    miss = False
+
+    def round(self, rounds, people):  # return -1 for self lost, 1 for opponent lost, 0 for peace
+        self.miss = False
+        self.checkBroken()
+        if not self.isAlive():
+            return -1
+        if self.sealed:
+            self.recover()
+            return 0
+        if self.silenced:
+            self.recover_silence()
+            people.beingAttacked(self.attack, self)
+            if not people.isAlive():
+                return 1
+            return 0
+        else:
+            if self.weak:
+                self.attack -= 6
+            result = self.action(rounds, people)
+            if self.weak:
+                self.attack += 6
+                self.weak = False
+            return result
 
     def action(self, rounds, people):
         if rounds % 2 == 0:
@@ -469,18 +598,19 @@ class Eden(People):
         return 0
 
     def skill1(self, rounds, people):
-        self.attack += 4
-        self.normal_attack(rounds, self)
-        self.speed = 100
+        self.HP += int(4*random.random()) + 1
+        if self.HP > 100:
+            self.HP = 100
+        people.beingAttacked(int(self.attack*1.3), self)
 
-    def normal_attack(self, rounds, people):
-        if not self.stunned:
-            people.beingAttacked(self.attack, self)
-            if random.random() < 0.5:
-                people.beingAttacked(self.attack, self)
+    def beingAttacked(self, damage, source, isPhysic=True):
+        if random.random() < 0.15:
+            self.miss = True
         else:
-            self.HP -= self.attack - self.defence
-            self.recover()
-            if random.random() < 0.5:
-                people.beingAttacked(self.attack, self)
+            if not self.miss:
+                if isPhysic:
+                    if damage > self.defence:
+                        self.HP -= damage - self.defence
+                else:
+                    self.HP -= damage
 
