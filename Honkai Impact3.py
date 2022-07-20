@@ -43,7 +43,7 @@ def game():
     elysia_wins = 0
     mobius_wins = 0
     hua_wins = 0
-    for i in range(100):
+    for i in range(10000):
         rounds = 1
         kevin = Heroes.Kevin()
         v2v = Heroes.V2v()
@@ -57,8 +57,8 @@ def game():
         result = 0
         while result == 0:
             result = fight(elysia, hua, rounds)
-            print("rounds: ", rounds, 'elysia HP', elysia.HP)
-            print("rounds: ", rounds, 'hua HP', hua.HP)
+            # print("rounds: ", rounds, 'elysia HP', elysia.HP)
+            # print("rounds: ", rounds, 'hua HP', hua.HP)
             rounds += 1
         if result == 1:
             elysia_wins += 1
