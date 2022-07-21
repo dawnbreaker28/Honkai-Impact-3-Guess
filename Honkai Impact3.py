@@ -67,7 +67,7 @@ def game(a, b):
     right = Player(dictionary[b])
     for i in range(10000):
         rounds = 1
-        kevin = Heroes.Kevin(),
+        kevin = Heroes.Kevin()
         v2v = Heroes.V2v()
         kosmo = Heroes.Kosmo()
         griseo = Heroes.Griseo()
@@ -109,7 +109,7 @@ def game(a, b):
 
 
 if __name__ == '__main__':
-    game(8, 4)
+    game(1, 5)
     # dictionary = {
     #     1: 'kevin',
     #     2: 'elysia',
