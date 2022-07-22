@@ -16,7 +16,7 @@ class Player:
         self.wins += 1
 
 
-def fight(left, right, rounds):
+def fight(left, right, rounds):  # return 1 for left win, 2 for right win
     if left.speed < right.speed:
         r2 = right.round(rounds, left)
         if r2 == 0:
@@ -109,7 +109,7 @@ def game(a, b):
 
 
 if __name__ == '__main__':
-    game(1, 5)
+    game(8, 3)
     # dictionary = {
     #     1: 'kevin',
     #     2: 'elysia',
