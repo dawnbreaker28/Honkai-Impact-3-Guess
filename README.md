@@ -1,9 +1,7 @@
-用python模拟崩坏3夏日竞猜活动（海滨的灼热乱斗）
+Simulating the 'Honkai Impact 3rd Summer Guessing Event (Seaside Heated Brawl)' with Python3.
 
-已实现的英桀：全部
+Implemented heroes: All
 
-使用方式，根据 if __name__ == '__main__': 下方的注释找到英桀编号，作为参数输入game（）中就行
+To use, locate the hero ID from the comments below the 'if name == "main":' line, and input it as a parameter into the game() function.
 
-Example: 凯文 vs 爱莉希雅
-if __name__ == '__main__':
-  game(1, 2)
+Example: Kevin vs. Elysia if name == 'main': game(1, 2)"
